@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-pink-50: #fff1f2;
+  --color-pink-100: #ffe4e6;
+  --color-pink-200: #fecdd3;
+  --color-pink-300: #fda4af;
+  --color-pink-400: #fb7185;
+  --color-pink-500: #f43f5e;
+  --color-pink-600: #e11d48;
+  --color-pink-700: #be123c;
+  --color-pink-800: #9f1239;
+  --color-pink-900: #881337;
+  --color-pastel-blue: #a5b4fc;
+  --color-pastel-purple: #c4b5fd;
+  --font-sans: 'Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif';
+  --font-body: 'Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif';
+  --spacing-custom: 10px;
+  --breakpoint-xs: 30rem;
+  --breakpoint-2xl: 100rem;
+}
+
+body {
+  @apply bg-gradient-to-br from-pink-50 to-purple-100 text-gray-900; /* Light Mode: بينك وباستيل */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  @apply bg-gradient-to-br from-gray-900 to-gray-800 text-white; /* Dark Mode: رمادي داكن */
+}
+
+/* تصميم أنثوي للخلفيات */
+.bg-feminine {
+  @apply bg-gradient-to-br from-pink-200 to-purple-200;
+}
+
+.dark .bg-feminine {
+  @apply bg-gradient-to-br from-pink-800 to-purple-800;
+}
+
+/* دعم العربية */
+html[dir='rtl'] {
+  font-family: 'Poppins', 'Noto Sans Arabic', sans-serif;
+}
+
+/* Hover effects مستوحاة من المشروع القديم */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300;
+}
