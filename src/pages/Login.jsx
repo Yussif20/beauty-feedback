@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
-function Login() {
+function Login({ setUser }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -22,10 +22,11 @@ function Login() {
         setError(data.error);
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/');
+        setUser(data.user);
+        navigate('/home');
       }
     } catch (err) {
-      setError('Failed to connect to server');
+      setError(t('server_error'));
     }
   };
 
@@ -68,6 +69,12 @@ function Login() {
             {t('login')}
           </button>
         </form>
+        <p className="mt-4 text-center text-gray-900 dark:text-gray-300">
+          {t('no_account')}{' '}
+          <Link to="/register" className="text-pink-600 hover:text-pink-700">
+            {t('signup')}
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -1,48 +1,39 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Profile from './pages/Profile';
+import Register from './pages/Register';
+import Home from './pages/Home';
 import Search from './pages/Search';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import SinglePost from './pages/SinglePost';
+import Chat from './pages/Chat';
+import { useEffect, useState } from 'react';
 
 function App() {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const { i18n } = useTranslation();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
-  const changeLanguage = (lang) => {
-    i18n.changeLanguage(lang);
-    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-  };
+  }, []);
 
   return (
-    <div className="min-h-screen">
-      <Navbar toggleTheme={toggleTheme} changeLanguage={changeLanguage} theme={theme} />
+    <Router>
+      <Navbar user={user} setUser={setUser} />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/" element={<Login setUser={setUser} />} />
+        <Route path="/register" element={<Register setUser={setUser} />} />
+        <Route path="/home" element={<Home user={user} />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/profile" element={<Profile user={user} />} />
+        <Route path="/admin" element={<AdminDashboard user={user} />} />
+        <Route path="/post/:id" element={<SinglePost user={user} />} />
+        <Route path="/chat" element={<Chat user={user} />} />
       </Routes>
-    </div>
+    </Router>
   );
 }
 

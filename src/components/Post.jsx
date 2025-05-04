@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import Comment from './Comment';
 
-function Post({ post }) {
+function Post({ post, user }) {
   const { t } = useTranslation();
   const [comment, setComment] = useState('');
   const [likes, setLikes] = useState(post.likes || 0);
@@ -16,11 +17,12 @@ function Post({ post }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           post_id: post.id,
-          user_id: JSON.parse(localStorage.getItem('user')).id,
+          user_id: user.id,
           content: comment,
         }),
       });
       setComment('');
+      // يفضل تحديث البوستات هنا لو كنتي بتستخدمي state عام
     } catch (err) {
       console.error('Comment failed:', err);
     }
@@ -33,7 +35,7 @@ function Post({ post }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           post_id: post.id,
-          user_id: JSON.parse(localStorage.getItem('user')).id,
+          user_id: user.id,
           is_like: isLike,
         }),
       });
@@ -49,14 +51,16 @@ function Post({ post }) {
 
   return (
     <div className="card">
-      <p className="text-gray-900 dark:text-white">{post.content}</p>
-      {post.image && (
-        <img
-          src={`/backend/uploads/${post.image}`}
-          alt="Post"
-          className="mt-2 rounded-lg w-full object-cover"
-        />
-      )}
+      <Link to={`/post/${post.id}`}>
+        <p className="text-gray-900 dark:text-white">{post.content}</p>
+        {post.image && (
+          <img
+            src={`/backend/uploads/${post.image}`}
+            alt="Post"
+            className="mt-2 rounded-lg w-full object-cover"
+          />
+        )}
+      </Link>
       <div className="mt-2 flex space-x-4">
         <button
           onClick={() => handleLike(true)}
