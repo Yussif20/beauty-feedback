@@ -99,9 +99,17 @@ const mockMessages = [
   },
 ];
 
+// Track user reactions to prevent multiple likes/dislikes
+const userReactions = new Map(); // Map<post_id, Map<user_id, 'like'|'dislike'>>
+
 export const getMockUser = (email, password) => {
   const user = mockUsers.find((u) => u.email === email && password === "password123");
   return user ? { user } : { error: "Invalid email or password" };
+};
+
+export const configureMockData = () => {
+  // Reset userReactions for testing or initialization
+  userReactions.clear();
 };
 
 export const registerMockUser = (userData) => {
@@ -131,7 +139,7 @@ export const createMockPost = (postData) => {
   const newPost = {
     id: mockPosts.length + 1,
     ...postData,
-    status: postData.is_admin ? "approved" : "pending", // Auto-approve for admins
+    status: postData.is_admin ? "approved" : "pending",
     created_at: new Date().toISOString(),
     likes: 0,
     dislikes: 0,
@@ -174,16 +182,59 @@ export const addMockComment = (commentData) => {
 };
 
 export const addMockLike = (likeData) => {
-  const post = mockPosts.find((post) => post.id === likeData.post_id);
-  if (post) {
-    if (likeData.is_like) {
-      post.likes += 1;
-    } else {
-      post.dislikes += 1;
+  const { post_id, user_id, is_like, remove } = likeData;
+  const post = mockPosts.find((post) => post.id === post_id);
+  if (!post) {
+    return { error: "Post not found" };
+  }
+
+  // Initialize reactions for this post if not exists
+  if (!userReactions.has(post_id)) {
+    userReactions.set(post_id, new Map());
+  }
+  const postReactions = userReactions.get(post_id);
+
+  if (remove) {
+    // Remove the user's reaction
+    if (postReactions.has(user_id)) {
+      const currentReaction = postReactions.get(user_id);
+      if (currentReaction === 'like') {
+        post.likes = Math.max(0, post.likes - 1);
+      } else if (currentReaction === 'dislike') {
+        post.dislikes = Math.max(0, post.dislikes - 1);
+      }
+      postReactions.delete(user_id);
     }
     return { success: true };
   }
-  return { error: "Post not found" };
+
+  // Check if user already has a reaction
+  if (postReactions.has(user_id)) {
+    const currentReaction = postReactions.get(user_id);
+    if (currentReaction === 'like' && is_like) {
+      return { success: true }; // Already liked
+    }
+    if (currentReaction === 'dislike' && !is_like) {
+      return { success: true }; // Already disliked
+    }
+    // User is switching reaction
+    if (currentReaction === 'like') {
+      post.likes = Math.max(0, post.likes - 1);
+    } else {
+      post.dislikes = Math.max(0, post.dislikes - 1);
+    }
+  }
+
+  // Apply new reaction
+  if (is_like) {
+    post.likes += 1;
+    postReactions.set(user_id, 'like');
+  } else {
+    post.dislikes += 1;
+    postReactions.set(user_id, 'dislike');
+  }
+
+  return { success: true };
 };
 
 export const getMockMessages = () => mockMessages;

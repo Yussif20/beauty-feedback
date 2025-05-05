@@ -10,6 +10,7 @@ function Post({ post, user }) {
   const [comment, setComment] = useState('');
   const [likes, setLikes] = useState(post.likes || 0);
   const [dislikes, setDislikes] = useState(post.dislikes || 0);
+  const [userReaction, setUserReaction] = useState(null); // Tracks user's like/dislike state
 
   const handleComment = async (e) => {
     e.preventDefault();
@@ -22,7 +23,6 @@ function Post({ post, user }) {
         content: comment,
       });
       setComment('');
-      // Note: Mock data updates automatically, but a real backend would require refetching
     } catch (err) {
       console.error('Comment failed:', err);
     }
@@ -30,15 +30,40 @@ function Post({ post, user }) {
 
   const handleLike = async (isLike) => {
     try {
-      await API_ENDPOINTS.LIKES({
-        post_id: post.id,
-        user_id: user.id,
-        is_like: isLike,
-      });
-      if (isLike) {
-        setLikes(likes + 1);
+      // If user clicks the same reaction, remove it
+      if (userReaction === (isLike ? 'like' : 'dislike')) {
+        await API_ENDPOINTS.LIKES({
+          post_id: post.id,
+          user_id: user.id,
+          is_like: isLike,
+          remove: true, // Indicate removal
+        });
+        if (isLike) {
+          setLikes(likes - 1);
+        } else {
+          setDislikes(dislikes - 1);
+        }
+        setUserReaction(null);
       } else {
-        setDislikes(dislikes + 1);
+        // If user switches reaction or reacts for the first time
+        await API_ENDPOINTS.LIKES({
+          post_id: post.id,
+          user_id: user.id,
+          is_like: isLike,
+        });
+        if (isLike) {
+          setLikes(likes + 1);
+          if (userReaction === 'dislike') {
+            setDislikes(dislikes - 1);
+          }
+          setUserReaction('like');
+        } else {
+          setDislikes(dislikes + 1);
+          if (userReaction === 'like') {
+            setLikes(likes - 1);
+          }
+          setUserReaction('dislike');
+        }
       }
     } catch (err) {
       console.error('Like failed:', err);
@@ -74,14 +99,22 @@ function Post({ post, user }) {
       <div className="mt-4 flex space-x-4">
         <button
           onClick={() => handleLike(true)}
-          className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 cursor-pointer"
+          className={`flex items-center space-x-1 cursor-pointer ${
+            userReaction === 'like'
+              ? 'text-pink-600'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
         >
           <FaThumbsUp />
           <span>{likes}</span>
         </button>
         <button
           onClick={() => handleLike(false)}
-          className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 cursor-pointer"
+          className={`flex items-center space-x-1 cursor-pointer ${
+            userReaction === 'dislike'
+              ? 'text-pink-600'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
         >
           <FaThumbsDown />
           <span>{dislikes}</span>
