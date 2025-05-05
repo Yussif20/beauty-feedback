@@ -161,19 +161,19 @@ function Navbar({ user, setUser, isAuthPage }) {
         </div>
       </div>
       {isOpen && (
-        <div className="md:hidden bg-pink-600 dark:bg-gray-800 px-4 py-2">
+        <div className="md:hidden bg-pink-600 dark:bg-gray-800 px-4 py-6 flex flex-col items-center space-y-4">
           {!isAuthPage && user ? (
             <>
               <Link
                 to="/home"
-                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700"
                 onClick={() => setIsOpen(false)}
               >
                 {t('home')}
               </Link>
               <Link
                 to="/chat"
-                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700"
                 onClick={() => setIsOpen(false)}
               >
                 {t('chat')}
@@ -181,7 +181,7 @@ function Navbar({ user, setUser, isAuthPage }) {
               {user.is_admin && (
                 <Link
                   to="/admin"
-                  className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                  className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700"
                   onClick={() => setIsOpen(false)}
                 >
                   {t('admin_dashboard')}
@@ -189,7 +189,7 @@ function Navbar({ user, setUser, isAuthPage }) {
               )}
               <Link
                 to="/profile"
-                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300 flex items-center"
+                className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700 flex justify-center items-center"
                 onClick={() => setIsOpen(false)}
               >
                 <FaUser className="mr-2" /> {t('profile')}
@@ -199,7 +199,7 @@ function Navbar({ user, setUser, isAuthPage }) {
                   handleLogout();
                   setIsOpen(false);
                 }}
-                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300 flex items-center"
+                className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700 flex justify-center items-center"
               >
                 <FaSignOutAlt className="mr-2" /> {t('log_out')}
               </button>
@@ -210,11 +210,11 @@ function Navbar({ user, setUser, isAuthPage }) {
               toggleLanguage();
               setIsOpen(false);
             }}
-            className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+            className="text-white text-lg font-medium hover:text-pink-200 transition-colors duration-300 w-full text-center py-2 rounded-lg hover:bg-pink-700 dark:hover:bg-gray-700"
           >
             {i18n.language === 'en' ? 'العربية' : 'English'}
           </button>
-          <div className="py-2">
+          <div className="py-2 w-full flex justify-center">
             <ThemeSwitcher />
           </div>
         </div>
