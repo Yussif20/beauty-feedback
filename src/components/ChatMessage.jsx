@@ -1,22 +1,15 @@
-function ChatMessage({ message, user }) {
-  const isOwnMessage = message.sender_id === user.id;
+import { useTranslation } from 'react-i18next';
+
+function ChatMessage({ message }) {
+  const { t } = useTranslation();
 
   return (
-    <div
-      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}
-    >
-      <div
-        className={`max-w-xs p-2 rounded-lg ${
-          isOwnMessage
-            ? 'bg-pink-600 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
-        }`}
-      >
-        <p>{message.content}</p>
-        <p className="text-xs opacity-75">
-          {new Date(message.created_at).toLocaleTimeString()}
-        </p>
-      </div>
+    <div className="p-2 bg-pink-50 dark:bg-gray-700 rounded-lg mb-2">
+      <p className="text-gray-900 dark:text-white">{message.content}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        {t('by')} {message.first_name} {message.last_name} -{' '}
+        {new Date(message.created_at).toLocaleString()}
+      </p>
     </div>
   );
 }

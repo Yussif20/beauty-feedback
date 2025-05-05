@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { API_ENDPOINTS } from '../api';
 import Comment from './Comment';
+import { FaThumbsUp, FaThumbsDown, FaComment } from 'react-icons/fa';
 
 function Post({ post, user }) {
   const { t } = useTranslation();
@@ -12,17 +14,15 @@ function Post({ post, user }) {
   const handleComment = async (e) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost/backend/index.php/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: post.id,
-          user_id: user.id,
-          content: comment,
-        }),
+      await API_ENDPOINTS.COMMENTS({
+        post_id: post.id,
+        user_id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        content: comment,
       });
       setComment('');
-      // يفضل تحديث البوستات هنا لو كنتي بتستخدمي state عام
+      // Note: Mock data updates automatically, but a real backend would require refetching
     } catch (err) {
       console.error('Comment failed:', err);
     }
@@ -30,14 +30,10 @@ function Post({ post, user }) {
 
   const handleLike = async (isLike) => {
     try {
-      await fetch('http://localhost/backend/index.php/likes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: post.id,
-          user_id: user.id,
-          is_like: isLike,
-        }),
+      await API_ENDPOINTS.LIKES({
+        post_id: post.id,
+        user_id: user.id,
+        is_like: isLike,
       });
       if (isLike) {
         setLikes(likes + 1);
@@ -49,31 +45,54 @@ function Post({ post, user }) {
     }
   };
 
+  if (!post?.id) return null;
+
   return (
     <div className="card">
-      <Link to={`/post/${post.id}`}>
-        <p className="text-gray-900 dark:text-white">{post.content}</p>
+      <Link to={`/post/${post.id}`} className="block cursor-pointer">
+        <p className="text-gray-900 dark:text-white text-lg font-medium">
+          {post.content}
+        </p>
         {post.image && (
           <img
-            src={`/backend/uploads/${post.image}`}
+            src={post.image}
             alt="Post"
-            className="mt-2 rounded-lg w-full object-cover"
+            className="mt-4 rounded-lg w-full max-h-64 object-cover"
           />
         )}
       </Link>
-      <div className="mt-2 flex space-x-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        {t('by')} {post.first_name} {post.last_name} •{' '}
+        {new Date(post.created_at).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+        })}
+      </p>
+      <div className="mt-4 flex space-x-4">
         <button
           onClick={() => handleLike(true)}
-          className="text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-colors duration-300"
+          className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 cursor-pointer"
         >
-          {t('like')} ({likes})
+          <FaThumbsUp />
+          <span>{likes}</span>
         </button>
         <button
           onClick={() => handleLike(false)}
-          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-300"
+          className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 cursor-pointer"
         >
-          {t('dislike')} ({dislikes})
+          <FaThumbsDown />
+          <span>{dislikes}</span>
         </button>
+        <Link
+          to={`/post/${post.id}`}
+          className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 cursor-pointer"
+        >
+          <FaComment />
+          <span>{post.comments?.length || 0}</span>
+        </Link>
       </div>
       <form onSubmit={handleComment} className="mt-4">
         <input
@@ -81,11 +100,11 @@ function Post({ post, user }) {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={t('add_comment')}
-          className="w-full p-2 border rounded bg-pink-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+          className="w-full p-3 border rounded-lg bg-pink-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-pink-500 focus:border-pink-500"
         />
         <button
           type="submit"
-          className="mt-2 bg-pink-600 text-white p-2 rounded hover:bg-pink-700 transition-all duration-300"
+          className="mt-2 bg-pink-600 text-white p-2 rounded-lg font-medium w-full sm:w-auto cursor-pointer"
         >
           {t('comment')}
         </button>

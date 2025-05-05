@@ -1,32 +1,27 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import {
+  FaUser,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+  FaSearch,
+} from 'react-icons/fa';
 import ThemeSwitcher from './ThemeSwitcher';
-import { FaUserCircle } from 'react-icons/fa';
+import { API_ENDPOINTS } from '../api';
 
-function Navbar({ user, setUser }) {
+function Navbar({ user, setUser, isAuthPage }) {
   const { t, i18n } = useTranslation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const searchRef = useRef(null);
 
-  const isAuthPage =
-    location.pathname === '/' || location.pathname === '/register';
-
-  const navItems = [
-    { path: '/home', label: t('home') },
-    { path: '/search', label: t('search') },
-    { path: '/chat', label: t('chat') },
-  ];
-
-  const handleLanguageChange = () => {
+  const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'ar' : 'en';
     i18n.changeLanguage(newLang);
-    document.documentElement.setAttribute(
-      'dir',
-      newLang === 'ar' ? 'rtl' : 'ltr'
-    );
   };
 
   const handleLogout = () => {
@@ -35,148 +30,193 @@ function Navbar({ user, setUser }) {
     navigate('/');
   };
 
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const posts = await API_ENDPOINTS.POSTS();
+      const filtered = posts.filter((post) =>
+        post.content.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(filtered);
+    } catch (err) {
+      console.error('Search failed:', err);
+    }
+  };
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchResults([]);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <nav className="w-full bg-feminine shadow-sm px-4 lg:px-8 py-4 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <nav className="w-full bg-pink-600 dark:bg-gray-800 shadow-md z-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link
           to={user ? '/home' : '/'}
-          className="transform hover:scale-105 transition-transform duration-300"
+          className="text-white text-xl sm:text-2xl font-bold"
         >
-          <span className="text-2xl md:text-3xl font-bold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300">
-            {t('welcome')}
-          </span>
+          Beauty Feedback
         </Link>
-        {!isAuthPage && user && (
-          <div className="hidden md:flex space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-lg font-semibold hover:text-pink-400 transition-colors duration-300 ${
-                  location.pathname === item.path
-                    ? 'text-pink-400 border-b-2 border-pink-400'
-                    : ''
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        )}
         <div className="flex items-center space-x-4">
-          <button
-            className="cursor-pointer text-sm text-gray-900 dark:text-gray-300 hover:text-pink-400 dark:hover:text-pink-400 transition-colors duration-300"
-            onClick={handleLanguageChange}
-          >
-            {i18n.language === 'ar' ? 'English' : 'العربية'}
-          </button>
-          <ThemeSwitcher />
           {!isAuthPage && user && (
-            <div className="relative">
-              <button
-                className="text-2xl text-gray-900 dark:text-gray-300 focus:outline-none"
-                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
-                aria-label="Account menu"
-              >
-                <FaUserCircle />
-              </button>
-              {isAccountMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-10">
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-gray-900 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900 hover:text-pink-600 dark:hover:text-pink-400"
-                    onClick={() => setIsAccountMenuOpen(false)}
-                  >
-                    {t('profile')}
-                  </Link>
-                  {user.is_admin && (
+            <div className="relative" ref={searchRef}>
+              <div className="flex items-center bg-white dark:bg-gray-700 rounded-lg px-3 py-2">
+                <FaSearch className="text-gray-500 dark:text-gray-400 mr-2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  placeholder={t('search')}
+                  className="bg-transparent text-gray-900 dark:text-white focus:outline-none w-32 sm:w-48"
+                />
+              </div>
+              {searchResults.length > 0 && (
+                <div className="absolute top-12 left-0 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg max-h-96 overflow-y-auto">
+                  {searchResults.map((post) => (
                     <Link
-                      to="/admin"
-                      className="block px-4 py-2 text-gray-900 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900 hover:text-pink-600 dark:hover:text-pink-400"
-                      onClick={() => setIsAccountMenuOpen(false)}
+                      key={post.id}
+                      to={`/post/${post.id}`}
+                      className="block p-4 hover:bg-pink-50 dark:hover:bg-gray-700 transition-all duration-300"
+                      onClick={() => {
+                        setSearchResults([]);
+                        setSearchQuery('');
+                      }}
                     >
-                      {t('admin')}
+                      <p className="text-gray-900 dark:text-white text-sm">
+                        {post.content}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {t('by')} {post.first_name} {post.last_name}
+                      </p>
                     </Link>
-                  )}
-                  <button
-                    className="block w-full text-left px-4 py-2 text-gray-900 dark:text-gray-300 hover:bg-pink-100 dark:hover:bg-pink-900 hover:text-pink-600 dark:hover:text-pink-400"
-                    onClick={handleLogout}
-                  >
-                    {t('logout')}
-                  </button>
+                  ))}
                 </div>
               )}
             </div>
           )}
-          {!isAuthPage && user && (
+          <div className="hidden md:flex items-center space-x-6">
+            {!isAuthPage && user ? (
+              <>
+                <Link
+                  to="/home"
+                  className="text-white hover:text-pink-200 transition-colors duration-300 font-medium"
+                >
+                  {t('home')}
+                </Link>
+                <Link
+                  to="/chat"
+                  className="text-white hover:text-pink-200 transition-colors duration-300 font-medium"
+                >
+                  {t('chat')}
+                </Link>
+                {user.is_admin && (
+                  <Link
+                    to="/admin"
+                    className="text-white hover:text-pink-200 transition-colors duration-300 font-medium"
+                  >
+                    {t('admin_dashboard')}
+                  </Link>
+                )}
+                <Link
+                  to="/profile"
+                  className="text-white hover:text-pink-200 transition-colors duration-300 font-medium flex items-center"
+                >
+                  <FaUser className="mr-1" /> {t('profile')}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-white hover:text-pink-200 transition-colors duration-300 font-medium flex items-center"
+                >
+                  <FaSignOutAlt className="mr-1" /> {t('log_out')}
+                </button>
+              </>
+            ) : null}
             <button
-              className="md:hidden text-2xl text-gray-900 dark:text-gray-300 focus:outline-none"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
+              onClick={toggleLanguage}
+              className="text-white hover:text-pink-200 transition-colors duration-300 font-medium"
             >
-              <svg
-                className="w-8 h-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g className="transition-all duration-300 ease-in-out">
-                  <path
-                    className={`stroke-2 origin-center ${
-                      isMenuOpen
-                        ? 'rotate-45 translate-y-[6px]'
-                        : 'rotate-0 translate-y-0'
-                    }`}
-                    d="M4 6h16"
-                    style={{
-                      transition:
-                        'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
-                    }}
-                  />
-                  <path
-                    className={`stroke-2 ${
-                      isMenuOpen ? 'opacity-0' : 'opacity-100'
-                    }`}
-                    d="M4 12h16"
-                    style={{ transition: 'opacity 0.3s ease-in-out' }}
-                  />
-                  <path
-                    className={`stroke-2 origin-center ${
-                      isMenuOpen
-                        ? '-rotate-45 translate-y-[-6px]'
-                        : 'rotate-0 translate-y-0'
-                    }`}
-                    d="M4 18h16"
-                    style={{
-                      transition:
-                        'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
-                    }}
-                  />
-                </g>
-              </svg>
+              {i18n.language === 'en' ? 'العربية' : 'English'}
             </button>
-          )}
+            <ThemeSwitcher />
+          </div>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-white hover:text-pink-200 transition-colors duration-300"
+            >
+              {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+          </div>
         </div>
       </div>
-      {!isAuthPage && user && (
-        <div
-          className={`md:hidden bg-gray-800 bg-opacity-90 backdrop-blur-md transition-all duration-500 ease-in-out ${
-            isMenuOpen
-              ? 'max-h-96 opacity-100'
-              : 'max-h-0 opacity-0 overflow-hidden'
-          }`}
-        >
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="block px-4 py-3 text-lg font-medium text-white hover:text-pink-400 hover:bg-pink-400 hover:bg-opacity-20 transition-all duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+      {isOpen && (
+        <div className="md:hidden bg-pink-600 dark:bg-gray-800 px-4 py-2">
+          {!isAuthPage && user ? (
+            <>
+              <Link
+                to="/home"
+                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                onClick={() => setIsOpen(false)}
+              >
+                {t('home')}
+              </Link>
+              <Link
+                to="/chat"
+                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                onClick={() => setIsOpen(false)}
+              >
+                {t('chat')}
+              </Link>
+              {user.is_admin && (
+                <Link
+                  to="/admin"
+                  className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('admin_dashboard')}
+                </Link>
+              )}
+              <Link
+                to="/profile"
+                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300 flex items-center"
+                onClick={() => setIsOpen(false)}
+              >
+                <FaUser className="mr-2" /> {t('profile')}
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="block py-2 text-white hover:text-pink-200 transition-colors duration-300 flex items-center"
+              >
+                <FaSignOutAlt className="mr-2" /> {t('log_out')}
+              </button>
+            </>
+          ) : null}
+          <button
+            onClick={() => {
+              toggleLanguage();
+              setIsOpen(false);
+            }}
+            className="block py-2 text-white hover:text-pink-200 transition-colors duration-300"
+          >
+            {i18n.language === 'en' ? 'العربية' : 'English'}
+          </button>
+          <div className="py-2">
+            <ThemeSwitcher />
+          </div>
         </div>
       )}
     </nav>
